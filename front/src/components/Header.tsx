@@ -32,7 +32,7 @@ export function Header({
           href="/"
           className="text-2xl font-bold text-brand hover:text-brand/80"
         >
-          DecideFor.Us
+          DecisionsFor.Us
         </a>
         {!noLinks && (
           <>
