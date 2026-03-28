@@ -1,3 +1,7 @@
+import { MongoClient } from 'mongodb';
+import { APIEndpoints, USER_DB } from './defines';
+import type { User } from '@shared/shared-types';
+
 Bun.serve({
     port: Bun.env.PORT,
     async fetch(req) {
@@ -5,7 +9,7 @@ Bun.serve({
         const url = new URL(req.url);
 
         if (url.pathname.startsWith('/api/') || url.pathname === '/api') {
-            return await Route(url);
+            return await Route(req, url);
         }
 
         const filePath = `../front/dist${url.pathname === '/' ?     '/index.html' : url.pathname}`;
@@ -21,10 +25,69 @@ Bun.serve({
     }
 })
 
-async function Route(url: URL): Promise<Response> {
-    if (url.pathname === '/api/shared') {
-        const { sharedString } = await import("@shared/shared");
-        return new Response(sharedString);
+async function Route(request: Request, url: URL): Promise<Response> {
+    const body = await request.text();
+    if (url.pathname == APIEndpoints.REGISTER && request.method === 'POST') {
+        try {
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            const user: User = JSON.parse(body);
+            await getUser(user);
+            return new Response("");
+        } catch (err) {
+            console.error("Error registering user:", err);
+            return new Response("Error registering user", { status: 500 });
+        }
     }
-    return new Response("Hello from the backend!");
+
+    if (url.pathname == APIEndpoints.GET && request.method === 'GET') {
+        try {
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            const user: User = JSON.parse(body);
+            await newUser(user);
+            return new Response("Found user")
+        } catch (err) {
+            console.error("Error finding user: ", err);
+            return new Response("Error registering user", { status: 500 });
+        }
+    }
+    
+    return new Response("Not Found", { status: 404 });
+
+}
+
+async function newUser(user: User) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        await client.connect();
+        const result = await users.insertOne({ username: user.username, password: user.password, email: user.email, theme: user.theme });
+        console.log(`New user created with the following id: ${result.insertedId}`);
+    }
+    catch (err) {
+        console.error("Error with MongoDB:", err);
+    } finally {
+        await client.close();
+    }
+}
+
+async function getUser(user: User) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB)
+        await client.connect();
+        const result = await users.findOne({ username: user.username, password: user.password});
+        
+        if (!result) throw `No user found for the following id: ${user.username}`;
+         
+        console.log(`Returned user with the following id: ${result.insertedId}`);
+    } catch (err) {
+        console.log(err);
+    }
+
 }

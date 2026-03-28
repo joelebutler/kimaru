@@ -1,4 +1,4 @@
-import { sharedString } from "@shared/shared";
+import { sharedString } from "@shared/shared-types";
 import { useEffect, useState } from "react";
 import type { Theme } from "./components/types";
 
