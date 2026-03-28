@@ -1,8 +1,6 @@
 import { sharedString } from "@shared/shared";
 import { useEffect, useState } from "react";
-import { Button } from "@ariakit/react";
-
-type Theme = "default" | "dark" | "sunset";
+import type { Theme } from "./components/types";
 
 function App() {
   const [theme, setTheme] = useState<Theme>(
