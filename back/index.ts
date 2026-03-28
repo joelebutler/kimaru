@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { USER_DB } from './defines';
+import { APIEndpoints, USER_DB } from './defines';
 import type { User } from '@shared/shared-types';
 
 Bun.serve({
@@ -26,15 +26,13 @@ Bun.serve({
 })
 
 async function Route(request: Request, url: URL): Promise<Response> {
-    if (url.pathname.startsWith('/api/register') && request.method === 'POST') {
-        console.log(`${url.pathname}: Registering user...`);
+    const body = await request.text();
+    if (url.pathname == APIEndpoints.REGISTER && request.method === 'POST') {
         try {
-            const body = await request.text();
             if (!body) {
                 return new Response("Missing request body", { status: 400 });
             }
             const user: User = JSON.parse(body);
-            console.log("Parsed user data:", user);
             await newUser(user);
             return new Response("User registered successfully");
         } catch (err) {
@@ -49,10 +47,10 @@ async function newUser(user: User) {
     const uri = Bun.env.CONNECTION_STRING || "";
     const client = new MongoClient(uri);
     try {
-    const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
-    await client.connect();
-    const result = await users.insertOne({ username: user.username, password: user.password, email: user.email });
-    console.log(`New user created with the following id: ${result.insertedId}`);
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        await client.connect();
+        const result = await users.insertOne({ username: user.username, password: user.password, email: user.email });
+        console.log(`New user created with the following id: ${result.insertedId}`);
     }
     catch (err) {
         console.error("Error with MongoDB:", err);
