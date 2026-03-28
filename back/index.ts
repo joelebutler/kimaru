@@ -1,4 +1,6 @@
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
+import { USER_DB } from './defines';
+import type { User } from '@shared/shared-types';
 
 Bun.serve({
     port: Bun.env.PORT,
@@ -7,7 +9,7 @@ Bun.serve({
         const url = new URL(req.url);
 
         if (url.pathname.startsWith('/api/') || url.pathname === '/api') {
-            return await Route(url);
+            return await Route(req, url);
         }
 
         const filePath = `../front/dist${url.pathname === '/' ?     '/index.html' : url.pathname}`;
@@ -23,29 +25,38 @@ Bun.serve({
     }
 })
 
-async function Route(url: URL): Promise<Response> {
-    if (url.pathname === '/api/shared') {
-        const { sharedString } = await import("@shared/shared");
-        return new Response(sharedString);
+async function Route(request: Request, url: URL): Promise<Response> {
+    if (url.pathname.startsWith('/api/register') && request.method === 'POST') {
+        console.log(`${url.pathname}: Registering user...`);
+        try {
+            const body = await request.text();
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            const user: User = JSON.parse(body);
+            console.log("Parsed user data:", user);
+            await newUser(user);
+            return new Response("User registered successfully");
+        } catch (err) {
+            console.error("Error registering user:", err);
+            return new Response("Error registering user", { status: 500 });
+        }
     }
-    return new Response("Hello from the backend!");
+    return new Response("Not Found", { status: 404 });
 }
 
-// mongodb connection
-async function runGetStarted() {
-  const uri = Bun.env.CONNECTION_STRING;
-  const client = new MongoClient(uri);
-
-  try {
-    const database = client.db('sample_mflix');
-    const movies = database.collection('movies');
-
-    // Queries for a movie that has a title value of 'Back to the Future'
-    const query = { title: 'Back to the Future' };
-    const movie = await movies.findOne(query);
-    console.log(movie);
-  } finally {
-    await client.close();
-  }
+async function newUser(user: User) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+    const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+    await client.connect();
+    const result = await users.insertOne({ username: user.username, password: user.password, email: user.email });
+    console.log(`New user created with the following id: ${result.insertedId}`);
+    }
+    catch (err) {
+        console.error("Error with MongoDB:", err);
+    } finally {
+        await client.close();
+    }
 }
-runGetStarted().catch(console.dir);

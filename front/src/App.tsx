@@ -1,4 +1,4 @@
-import { sharedString } from "@shared/shared";
+import { sharedString } from "@shared/shared-types";
 
 function App() {
   return (
