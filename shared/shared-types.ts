@@ -5,6 +5,21 @@ export type User = {
     theme?: string;
 }
 
+export type Room = {
+    id: string;
+    name: string;
+    createdAt: Date;
+    createdBy: User;
+    isAnonymous: boolean;
+    isPrivate: boolean;
+    password?: string;
+}
+
+export type Message = {
+  type: "success" | "error";
+  text: string;
+};
+
 export type Factor = {
     title: string, // Price
     details: string, // "I want it to be under $5,000"
@@ -21,5 +36,7 @@ export enum APIEndpoints {
     GET_USER = "/api/get-user",
     CHANGE_THEME = "/api/theme/change",
     GET_THEME = "/api/theme/get",
+    CREATE_ROOM = "/api/room/new",
+    ROOM_BASE = "/api/room/",
     CALL_GEMINI = "/api/gemini"
 }
