@@ -16,6 +16,7 @@ type FormState = {
   isPrivate: boolean;
   password?: string;
   isAnonymous: boolean;
+  isSolo: boolean;
 };
 
 function NewRoom() {
@@ -26,6 +27,7 @@ function NewRoom() {
     isPrivate: false,
     password: "",
     isAnonymous: false,
+    isSolo: false,
   });
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
@@ -134,6 +136,28 @@ function NewRoom() {
                     setForm((f) => ({ ...f, isAnonymous: val }))
                   }
                   aria-label="Anonymous Mode"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <label
+                  className="text-sm font-medium text-text/80 whitespace-nowrap"
+                  htmlFor="isSolo"
+                >
+                  Solo Room
+                </label>
+                <Tooltip content="If enabled, this room is just for you. You can set custom weightings yourself instead of voting with friends.">
+                  <FiInfo className="w-4 h-4 text-brand cursor-pointer" />
+                </Tooltip>
+              </div>
+              <div className="shrink-0">
+                <Switch
+                  name="isSolo"
+                  checked={form.isSolo}
+                  onChange={(val) => setForm((f) => ({ ...f, isSolo: val }))}
+                  aria-label="Solo Mode"
                 />
               </div>
             </div>
