@@ -16,6 +16,7 @@ export type Friendship = {
 export type Room = {
   id: string;
   name: string;
+  problemDescription: string; // Description of the problem being solved
   createdAt: Date;
   createdBy: User;
   isAnonymous: boolean;

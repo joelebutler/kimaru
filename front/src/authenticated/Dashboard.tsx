@@ -28,6 +28,8 @@ const Dashboard = () => {
 
   // Refresh user on mount
   useEffect(() => {
+    setOwnedLobbies([]);
+    setJoinedLobbies([]);
     refreshUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -35,6 +37,9 @@ const Dashboard = () => {
   // Fetch owned and joined lobbies separately
   useEffect(() => {
     const fetchLobbies = async () => {
+      // Clear lists immediately so UI does not show stale data
+
+
       const owned = user?.ownedLobbies || [];
       const joined = user?.joinedLobbies || [];
 
@@ -148,7 +153,7 @@ const Dashboard = () => {
                           e.preventDefault();
                           if (!user) return;
                           const res = await fetch(
-                            API.BASE + API.ROOM_BASE + lobby.id,
+                            API.BASE + API.ROOM_BASE + "/" + lobby.id,
                             {
                               method: "DELETE",
                             },

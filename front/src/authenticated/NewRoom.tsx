@@ -13,6 +13,7 @@ import { useNavigate } from "react-router";
 
 type FormState = {
   name: string;
+  problemDescription: string;
   isPrivate: boolean;
   password?: string;
   isAnonymous: boolean;
@@ -24,6 +25,7 @@ function NewRoom() {
   const [message, setMessage] = useState<Message | null>(null);
   const [form, setForm] = useState<FormState>({
     name: "",
+    problemDescription: "",
     isPrivate: false,
     password: "",
     isAnonymous: false,
@@ -44,6 +46,7 @@ function NewRoom() {
       }
       const payload: Partial<Room> = {
         name: form.name,
+        problemDescription: form.problemDescription,
         isPrivate: form.isPrivate,
         isAnonymous: form.isAnonymous,
         password: form.isPrivate ? form.password : undefined,
@@ -111,6 +114,25 @@ function NewRoom() {
                 value={form.name}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="problemDescription"
+                className="text-sm font-medium text-text/80"
+              >
+                Problem Description
+              </label>
+              <textarea
+                name="problemDescription"
+                placeholder="Describe the problem or decision to be solved in this room..."
+                className="px-4 py-2 text-sm rounded border border-brand/30 bg-surface/60 focus:outline-none focus:ring-2 focus:ring-brand w-full min-h-[80px]"
+                required
+                value={form.problemDescription}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, problemDescription: e.target.value }))
                 }
                 disabled={loading}
               />

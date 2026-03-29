@@ -396,8 +396,8 @@ async function CREATE_ROOM(body: string | null) {
       return new Response("Missing request body", { status: 400 });
     }
     const room: Partial<Room> = JSON.parse(body);
-    const roomId = await createRoom(room);
-    return new Response(JSON.stringify({ roomId }), {
+    const roomID = await createRoom(room);
+    return new Response(JSON.stringify({ roomID }), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
