@@ -143,11 +143,57 @@ async function Route(request: Request, url: URL): Promise<Response> {
         }
     }
     
+    // PATCH /api/room/id/add-member - add a user to a room's member list
+    if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && url.pathname.endsWith(APIEndpoints.ADD_TO_ROOM) && request.method === 'PATCH') {
+        console.log(`Adding member to room ${url.pathname.replace(APIEndpoints.ROOM_BASE, '').replace(APIEndpoints.ADD_TO_ROOM, '')} with body:`, body);
+        try {
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            const { username } = JSON.parse(body);
+            const roomId = url.pathname.split('/')[url.pathname.split('/').length - 2];
+            if (!roomId || !username) {
+                return new Response("Missing roomId or username", { status: 400 });
+            }
+            const uri = Bun.env.CONNECTION_STRING || "";
+            const client = new MongoClient(uri);
+            try {
+                await client.connect();
+                const rooms = client.db(Bun.env.DB_NAME).collection(ROOM_DB);
+                const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+                const room = await rooms.findOne({ roomId });
+                if (!room) return new Response("Room not found", { status: 404 });
+                // Add user to room's members array if not present
+                const updateResult = await rooms.updateOne(
+                    { roomId },
+                    { $addToSet: { members: username } }
+                );
+                // Add room to user's joinedLobbies if not present
+                await users.updateOne(
+                    { username },
+                    { $addToSet: { joinedLobbies: roomId } }
+                );
+                if (updateResult.modifiedCount > 0) {
+                    return new Response("User added to room", { status: 200 });
+                } else {
+                    return new Response("User already in room", { status: 200 });
+                }
+            } finally {
+                await client.close();
+            }
+        } catch (err) {
+            console.error("Error adding member to room:", err);
+            return new Response("Error adding member to room", { status: 500 });
+        }
+    }
+
     // GET /api/room/:id - fetch a room by roomId
     if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && request.method === 'GET') {
         const roomId = url.pathname.split('/').pop();
         return await getRoomById(roomId);
     }
+
+
 
     if (url.pathname == APIEndpoints.CREATE_ROOM && request.method === 'POST') {
         try {

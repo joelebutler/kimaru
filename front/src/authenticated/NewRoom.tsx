@@ -47,6 +47,7 @@ function NewRoom() {
         password: form.isPrivate ? form.password : undefined,
         createdBy,
         createdAt: new Date(),
+        members: createdBy ? [createdBy.username] : [],
       };
       const res = await fetch(APIEndpoints.CREATE_ROOM, {
         method: "POST",

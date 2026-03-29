@@ -14,7 +14,7 @@ export type Room = {
     createdBy: User;
     isAnonymous: boolean;
     isPrivate: boolean;
-    members: number;
+    members: string[]; // List of usernames
     password?: string;
 }
 
@@ -41,5 +41,6 @@ export enum APIEndpoints {
     GET_THEME = "/api/theme/get",
     CREATE_ROOM = "/api/room/new",
     ROOM_BASE = "/api/room/",
-    CALL_GEMINI = "/api/gemini"
+    CALL_GEMINI = "/api/gemini",
+    ADD_TO_ROOM = "/add-member",
 }

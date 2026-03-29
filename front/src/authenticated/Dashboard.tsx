@@ -14,12 +14,13 @@ interface Friend {
 interface Lobby {
   id: string;
   name: string;
-  members: number | string;
+  members: string[] | string;
 }
 
 const Dashboard = () => {
   const { user, refreshUser } = useUser();
-  const [lobbies, setLobbies] = useState<Lobby[]>([]);
+  const [ownedLobbies, setOwnedLobbies] = useState<Lobby[]>([]);
+  const [joinedLobbies, setJoinedLobbies] = useState<Lobby[]>([]);
   // Placeholder: friends list is empty
   const friends: Friend[] = [];
 
@@ -29,15 +30,15 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch lobbies when user.ownedLobbies changes
+  // Fetch owned and joined lobbies separately
   useEffect(() => {
     const fetchLobbies = async () => {
-      if (!user?.ownedLobbies?.length) {
-        setLobbies([]);
-        return;
-      }
-      const results: Lobby[] = await Promise.all(
-        user.ownedLobbies.map(async (roomId) => {
+      const owned = user?.ownedLobbies || [];
+      const joined = user?.joinedLobbies || [];
+
+      // Fetch owned lobbies
+      const ownedResults: Lobby[] = await Promise.all(
+        owned.map(async (roomId) => {
           try {
             const res = await fetch(`${APIEndpoints.ROOM_BASE}${roomId}`);
             if (!res.ok) throw new Error();
@@ -45,14 +46,34 @@ const Dashboard = () => {
             return {
               id: roomId,
               name: data.name,
-              members: data.members || "Unknown",
+              members: Array.isArray(data.members) ? data.members : "Unknown",
             };
           } catch {
             return { id: roomId, name: roomId, members: "Unknown" };
           }
         }),
       );
-      setLobbies(results);
+      setOwnedLobbies(ownedResults);
+
+      // Fetch joined lobbies (excluding those already owned)
+      const joinedFiltered = joined.filter((id) => !owned.includes(id));
+      const joinedResults: Lobby[] = await Promise.all(
+        joinedFiltered.map(async (roomId) => {
+          try {
+            const res = await fetch(`${APIEndpoints.ROOM_BASE}${roomId}`);
+            if (!res.ok) throw new Error();
+            const data: Room = await res.json();
+            return {
+              id: roomId,
+              name: data.name,
+              members: Array.isArray(data.members) ? data.members : "Unknown",
+            };
+          } catch {
+            return { id: roomId, name: roomId, members: "Unknown" };
+          }
+        }),
+      );
+      setJoinedLobbies(joinedResults);
     };
     fetchLobbies();
   }, [user]);
@@ -92,29 +113,63 @@ const Dashboard = () => {
         {/* Active Discussions / Lobbies */}
         <Card className="md:col-span-3 min-h-50">
           <h2 className="text-xl font-semibold mb-4">Active Decisions</h2>
-          <ul className="space-y-3">
-            {lobbies.length > 0 ? (
-              lobbies.map((lobby) => (
-                <li
-                  key={lobby.id}
-                  className="flex items-center justify-between p-2 rounded hover:bg-surface/70 transition"
-                >
-                  <span className="font-medium">{lobby.name}</span>
-                  <span className="text-xs text-gray-500">
-                    {lobby.members !== "Unknown" && "members"}
-                    {lobby.members}
-                  </span>
-                  <NavLink to={`/room/${lobby.id}`}>
-                    <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
-                      Join
-                    </button>
-                  </NavLink>
-                </li>
-              ))
-            ) : (
-              <p>No active decisions. Create or join a room to get started!</p>
-            )}
-          </ul>
+          {/* Owned Lobbies */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Owned Lobbies</h3>
+            <ul className="space-y-3">
+              {ownedLobbies.length > 0 ? (
+                ownedLobbies.map((lobby) => (
+                  <li
+                    key={lobby.id}
+                    className="flex items-center justify-between p-2 rounded hover:bg-surface/70 transition"
+                  >
+                    <span className="font-medium">{lobby.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {lobby.members !== "Unknown"
+                        ? `${Array.isArray(lobby.members) ? lobby.members.length : lobby.members} members`
+                        : "Unknown members"}
+                    </span>
+                    <NavLink to={`/room/${lobby.id}`}>
+                      <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
+                        Join
+                      </button>
+                    </NavLink>
+                  </li>
+                ))
+              ) : (
+                <p>No owned lobbies.</p>
+              )}
+            </ul>
+          </div>
+          <hr className="my-6 border-t border-gray-300" />
+          {/* Joined Lobbies */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Joined Lobbies</h3>
+            <ul className="space-y-3">
+              {joinedLobbies.length > 0 ? (
+                joinedLobbies.map((lobby) => (
+                  <li
+                    key={lobby.id}
+                    className="flex items-center justify-between p-2 rounded hover:bg-surface/70 transition"
+                  >
+                    <span className="font-medium">{lobby.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {lobby.members !== "Unknown"
+                        ? `${lobby.members} members`
+                        : "Unknown members"}
+                    </span>
+                    <NavLink to={`/room/${lobby.id}`}>
+                      <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
+                        Join
+                      </button>
+                    </NavLink>
+                  </li>
+                ))
+              ) : (
+                <p>No joined lobbies.</p>
+              )}
+            </ul>
+          </div>
         </Card>
       </div>
     </Section>

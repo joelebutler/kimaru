@@ -3,24 +3,42 @@ import { useParams } from "react-router";
 import { APIEndpoints, type Room } from "@shared/shared-types";
 import { Card } from "@front/components/Card";
 import { Section } from "@front/components/Section";
+import { useUser } from "@front/components/UserContext";
 
 function RoomPage() {
   const { id } = useParams();
+  const { user } = useUser();
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchRoom() {
+    async function fetchRoomAndJoin() {
       setLoading(true);
       setError(null);
       try {
+        // Fetch room info
+        console.log("Fetching room info for ID:", id);
         const res = await fetch(`${APIEndpoints.ROOM_BASE}${id}`);
         if (!res.ok) {
           throw new Error(await res.text());
         }
-        const data = await res.json();
+        const data: Room = await res.json();
         setRoom(data);
+
+        // Add user to room's member list if not already present
+        console.log("Room members:", data.members);
+        console.log("Current user:", user?.username);
+        if (user && data && !data.members.includes(user.username)) {
+          await fetch(
+            `${APIEndpoints.ROOM_BASE}${id}${APIEndpoints.ADD_TO_ROOM}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: user.username }),
+            },
+          );
+        }
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message);
@@ -31,8 +49,8 @@ function RoomPage() {
         setLoading(false);
       }
     }
-    if (id) fetchRoom();
-  }, [id]);
+    if (id) fetchRoomAndJoin();
+  }, [id, user]);
 
   if (loading)
     return (
