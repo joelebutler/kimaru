@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { ROOM_DB, SYSTEM_INSTRUCTIONS, USER_DB } from './defines';
-import { APIEndpoints, type Room, type GeminiRequest, type User } from '@shared/shared-types';
+import { APIEndpoints, type Room, type GeminiRequest, type User, type Friendship } from '@shared/shared-types';
 import { signJwt, verifyJwt } from './jwt';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
 
@@ -30,8 +30,15 @@ Bun.serve({
     }
 })
 
+//==================================================================================
+// routing
+//==================================================================================
 async function Route(request: Request, url: URL): Promise<Response> {
     const body = await request.text();
+
+    //*********************************************
+    // user & login
+    //*********************************************
     if (url.pathname == '/api/login' && request.method === 'POST') {
         try {
             if (!body) {
@@ -107,6 +114,9 @@ async function Route(request: Request, url: URL): Promise<Response> {
         }
     }
 
+    //*********************************************
+    // themes
+    //*********************************************
     if (url.pathname == APIEndpoints.CHANGE_THEME && request.method === 'PATCH') {
         try {
             if (!body) {
@@ -143,6 +153,9 @@ async function Route(request: Request, url: URL): Promise<Response> {
         }
     }
 
+    //*********************************************
+    // rooms
+    //*********************************************
             // PATCH /api/room/:id/leave - remove user from room's members and user's joinedLobbies
         if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && url.pathname.includes('/leave') && request.method === 'PATCH') {
             try {
@@ -262,30 +275,109 @@ async function Route(request: Request, url: URL): Promise<Response> {
     }
 
 
-
-    if (url.pathname == APIEndpoints.CREATE_ROOM && request.method === 'POST') {
+    //*********************************************
+    // friends list
+    //*********************************************
+    if (url.pathname == APIEndpoints.ADD_FRIEND && request.method === 'POST') {
         try {
             if (!body) {
                 return new Response("Missing request body", { status: 400 });
             }
-            const room: Partial<Room> = JSON.parse(body);
-            const roomId = await createRoom(room);
-            return new Response(JSON.stringify({ roomId }), {
+            const { currentUser, targetFriend }: { currentUser: User; targetFriend: User } = JSON.parse(body);
+            
+            if (!currentUser || !currentUser.username || !targetFriend) {
+                return new Response("Missing currentUser or targetUsername", { status: 400 });
+            }
+            
+            await addFriend(currentUser, targetFriend);
+            return new Response(JSON.stringify({ message: "Friend request sent" }), {
                 status: 201,
                 headers: { "Content-Type": "application/json" },
             });
         } catch (err) {
-            console.error("Error creating room:", err);
-            return new Response((err instanceof Error ? err.message : "Error creating room"), { status: 500 });
+            console.error("Error adding friend:", err);
+            return new Response((err instanceof Error ? err.message : "Error adding friend"), { status: 500 });
+        }
+    }
+
+    if (url.pathname == APIEndpoints.ACCEPT_FRIEND && request.method === 'PATCH') {
+        try {
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            const { user, friendUsername }: { user: User; friendUsername: string } = JSON.parse(body);
+            
+            if (!user || !user.username || !friendUsername) {
+                return new Response("Missing user or friendUsername", { status: 400 });
+            }
+            
+            await acceptFriend(user, friendUsername);
+            return new Response(JSON.stringify({ message: "Friendship accepted" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            });
+        } catch (err) {
+            console.error("Error accepting friend:", err);
+            return new Response((err instanceof Error ? err.message : "Error accepting friend"), { status: 500 });
+        }
+    }
+
+    if (url.pathname == APIEndpoints.GET_FRIENDS_LIST && request.method === 'GET') {
+        try {
+            const username = url.searchParams.get("username");
+            if (!username) {
+                return new Response("Missing username query parameter", { status: 400 });
+            }
+            
+            const user: User = { username };
+            const friends = await getFriendsList(user);
+            
+            if (friends === null) {
+                return new Response("User not found", { status: 404 });
+            }
+            
+            return new Response(JSON.stringify({ friends }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            });
+        } catch (err) {
+            console.error("Error retrieving friends list:", err);
+            return new Response("Error retrieving friends list", { status: 500 });
+        }
+    }
+
+    if (url.pathname == APIEndpoints.REMOVE_FRIEND && request.method === 'DELETE') {
+        try {
+            if (!body) {
+                return new Response("Missing request body", { status: 400 });
+            }
+            
+            const { user, friendUsername }: { user: User; friendUsername: string } = JSON.parse(body);
+            
+            if (!user || !user.username || !friendUsername) {
+                return new Response("Missing user or friendUsername", { status: 400 });
+            }
+            
+            await removeFriend(user, friendUsername);
+            return new Response(JSON.stringify({ message: "Friend removed" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            });
+        } catch (err) {
+            console.error("Error removing friend:", err);
+            return new Response((err instanceof Error ? err.message : "Error removing friend"), { status: 500 });
         }
     }
     
+
+    //*********************************************
+    // gemini api
+    //*********************************************
     if (url.pathname == APIEndpoints.CALL_GEMINI && request.method === 'POST') {
         try {
             if (!body) {
                 return new Response("Missing request body", { status: 400 });
             }
-            console.log("making request to gemini genai:", body);
             const prompt: GeminiRequest = JSON.parse(body);
             await callGemini(prompt);
             return new Response("Received response from gemini", { status: 201 });
@@ -298,6 +390,147 @@ async function Route(request: Request, url: URL): Promise<Response> {
     return new Response("Not Found", { status: 404 });
 
 }
+
+//==================================================================================
+// functions
+//==================================================================================
+
+async function addFriend(currentUser: User, targetFriend: User) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        await client.connect();
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        // Find current user by username only
+        const resultCurrent = await users.findOne({ username: currentUser.username });
+        const resultTarget = await users.findOne({username: targetFriend.username})
+        console.log('MongoDB user document:', resultCurrent);
+        if (!resultCurrent || !resultTarget) {
+            return null;
+        }
+        // If password is provided, check it (for login)
+        if (currentUser.password) {
+            const passwordMatch = await bcrypt.compare(currentUser.password, resultCurrent.password);
+            if (!passwordMatch) {
+                return null;
+            }
+        }
+        
+            await users.updateOne(
+                { username: resultCurrent.username },
+                { $addToSet: { 
+                    friends: targetFriend.username,
+                    status: "pending"
+                 } 
+                }
+            );
+            await users.updateOne(
+                { username: resultTarget.username },
+                { $addToSet: { 
+                    friends: currentUser.username,
+                    status: "pending"
+                 } 
+                }
+            );
+        
+    } catch (err) {
+        console.error(err);
+        return null;
+    } finally {
+        await client.close();
+    }
+}
+
+async function acceptFriend(user: User, friendUsername: string) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        await client.connect();
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        
+        const resultCurrent = await users.findOne({ username: user.username });
+        const resultTarget = await users.findOne({ username: friendUsername });
+        
+        console.log('Current user document:', resultCurrent);
+        console.log('Target user document:', resultTarget);
+        
+        if (!resultCurrent || !resultTarget) {
+            throw new Error("One or both users not found");
+        }
+        
+        // Update friendship status to accepted for both users
+        await users.updateOne(
+            { username: user.username, "friends.username": friendUsername },
+            { $set: { "friends.$.status": "accepted" } }
+        );
+        
+        await users.updateOne(
+            { username: friendUsername, "friends.username": user.username },
+            { $set: { "friends.$.status": "accepted" } }
+        );
+        
+        console.log(`Friendship between ${user.username} and ${friendUsername} accepted`);
+        return true;
+    } catch (err) {
+        console.error(err);
+        throw err;
+    } finally {
+        await client.close();
+    }
+}
+
+async function getFriendsList(user: User): Promise<Friendship[] | null> {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        await client.connect();
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        
+        const result = await users.findOne({ username: user.username });
+        console.log('MongoDB user document:', result);
+        
+        if (!result) {
+            return null;
+        }
+        
+        return result.friends || [];
+    } catch (err) {
+        console.error(err);
+        return null;
+    } finally {
+        await client.close();
+    }
+}
+
+async function removeFriend(user: User, friendUsername: string) {
+    const uri = Bun.env.CONNECTION_STRING || "";
+    const client = new MongoClient(uri);
+    try {
+        await client.connect();
+        const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+        
+        // Remove friend from current user's friends list
+        await users.updateOne(
+            { username: user.username },
+            { $pull: { friends: { username: friendUsername } } as any }
+        );
+        
+        // Remove current user from friend's friends list
+        await users.updateOne(
+            { username: friendUsername },
+            { $pull: { friends: { username: user.username } } as any }
+        );
+        
+        console.log(`Removed friendship between ${user.username} and ${friendUsername}`);
+        return true;
+    } catch (err) {
+        console.error("Error removing friend:", err);
+        throw err;
+    } finally {
+        await client.close();
+    }
+}
+
 
 async function newUser(user: User) {
     const uri = Bun.env.CONNECTION_STRING || "";
@@ -452,15 +685,15 @@ async function createRoom(room: Partial<Room>): Promise<string> {
     }
 
 async function callGemini( request: GeminiRequest) {
-    const sendContents:string = SYSTEM_INSTRUCTIONS + "\n\n" + request;
-    JSON.stringify(sendContents);
-
+    let sendContents:string = SYSTEM_INSTRUCTIONS + "\n\n" + JSON.stringify(request);;
+    
+    console.log("making request to gemini genai:", sendContents);
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: sendContents
         });
-        console.log(response);
+        console.log(response.text);
     } catch (err) {
         console.log(err);
     }

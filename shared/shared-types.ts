@@ -5,6 +5,12 @@ export type User = {
     theme?: string;
     ownedLobbies?: string[];
     joinedLobbies?: string[];
+    friends?: Friendship[]; // ✨ array of friendship :) ✨
+}
+
+export type Friendship = {
+   username: string,
+   status: "pending" | "accepted"
 }
 
 export type Room = {
@@ -23,15 +29,22 @@ export type Message = {
   text: string;
 };
 
+export type GeminiRequest = {
+    description: string;
+    factors: Factor[];
+}
+
 export type Factor = {
+    id: number,
     title: string, // Price
     details: string, // "I want it to be under $5,000"
     user_weighting: number // 2 votes up, or 1 vote net negative
 }
 
-export type GeminiRequest = {
-    description: string;
-    factors: Factor[];
+export type ResponseFactor = {
+    factorId: number,
+    matchPercent: number
+
 }
 
 export enum APIEndpoints {
@@ -43,4 +56,8 @@ export enum APIEndpoints {
     ROOM_BASE = "/api/room/",
     CALL_GEMINI = "/api/gemini",
     ADD_TO_ROOM = "/add-member",
+    ADD_FRIEND = "/api/add-friend",
+    ACCEPT_FRIEND = "/api/accept-friend",
+    GET_FRIENDS_LIST = "/api/get-friends",
+    REMOVE_FRIEND = "/api/remove-friend"
 }
