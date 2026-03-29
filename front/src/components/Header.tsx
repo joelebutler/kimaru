@@ -27,13 +27,16 @@ export function Header({
   const navigate = useNavigate();
   return (
     <header className={`sticky top-0 z-50 w-full ${className}`} {...props}>
-      <nav className="w-full flex items-center justify-between h-14 px-6 bg-surface/70 shadow-md backdrop-blur-md">
+      <nav className="w-full flex items-center justify-between h-14 px-6 bg-surface/70 shadow-md backdrop-blur-md gap-5">
         <a
           href="/"
           className="text-2xl font-bold text-brand hover:text-brand/80"
         >
           DecisionsFor.Us
         </a>
+        {mode === "authenticated" && (
+          <NavLink href={"/dashboard"}>Dashboard</NavLink>
+        )}
         {!noLinks && (
           <>
             <nav
@@ -50,10 +53,10 @@ export function Header({
               {mode === "homepage" && (
                 <>
                   <RouterLink to="/login">
-                    <Button>Login</Button>
+                    <Button className="px-2 py-1">Login</Button>
                   </RouterLink>
                   <RouterLink to="/register">
-                    <Button>Register</Button>
+                    <Button className="px-2 py-1">Register</Button>
                   </RouterLink>
                 </>
               )}
