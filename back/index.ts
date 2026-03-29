@@ -158,7 +158,7 @@ async function Route(request: Request, url: URL): Promise<Response> {
   // gemini api
   //*********************************************
   if (workingPathname.startsWith(API.CALL_GEMINI) && request.method === "POST")
-    CALL_GEMINI(body);
+    return await CALL_GEMINI(body);
 
   return new Response("Not Found", { status: 404 });
 }
@@ -524,8 +524,11 @@ async function CALL_GEMINI(body: string | null): Promise<Response> {
       return new Response("Missing request body", { status: 400 });
     }
     const prompt: GeminiRequest = JSON.parse(body);
-    await callGemini(prompt);
-    return new Response("Received response from gemini", { status: 201 });
+    const geminiText = await callGemini(prompt);
+    return new Response(geminiText, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("Error calling gemini ai:", err);
     return new Response(
@@ -874,7 +877,9 @@ async function callGemini(request: GeminiRequest) {
       contents: sendContents,
     });
     console.log(response.text);
+    return response.text;
   } catch (err) {
     console.log(err);
+    throw err;
   }
 }

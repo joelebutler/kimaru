@@ -51,14 +51,14 @@ export type GeminiRequest = {
 };
 
 export type Factor = {
-  id: number;
+  id: string | number;
   title: string; // Price
   details: string; // "I want it to be under $5,000"
   user_weighting: number; // 2 votes up, or 1 vote net negative
 };
 
 export type ResponseFactor = {
-  factorId: number;
+  factorId: string | number;
   matchPercent: number;
 };
 
