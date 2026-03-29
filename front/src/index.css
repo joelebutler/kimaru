@@ -34,6 +34,20 @@
   }
 }
 
+[data-theme="peach"] {
+  --brand: oklch(63.695% 0.23835 10.528);
+  --surface: oklch(80.872% 0.10712 44.118);
+  --text: oklch(100% 0.00011 271.152);
+}
+
+@supports not (color: oklch(66.708% 0.22017 28.589)) {
+  [data-theme="peach"] {
+    --brand: #f82568;
+    --surface: #fbaa87;
+    --text: #ffffff;
+  }
+}
+
 [data-theme="sunset"] {
   --brand: oklch(80% 0.22 40);
   --surface: oklch(98% 0.01 70);
@@ -48,8 +62,234 @@
   }
 }
 
+[data-theme="twilightsparkle"] {
+  --brand: oklch(63.764% 0.23874 9.546);
+  --surface: oklch(74.787% 0.14764 319.048);
+  --text: oklch(38.55% 0.12183 284.588);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="twilightsparkle"] {
+    --brand: #f8256b;
+    --surface: #d58de8;
+    --text: #3f3681;
+  }
+}
+
+[data-theme="DIO"] {
+  --brand: oklch(72.341% 0.14251 87.81);
+  --surface: oklch(91.713% 0.11923 92.908);
+  --text: oklch(56.613% 0.13249 122.958);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="DIO"] {
+    --brand: #cb9f19;
+    --surface: #ffe283;
+    --text: #688212;
+  }
+}
+
+[data-theme="teal"] {
+  --brand: oklch(52.077% 0.09123 176.947);
+  --surface: oklch(83.895% 0.18457 133.342);
+  --text: oklch(100% 0.00011 271.152);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="teal"] {
+    --brand: #157a68;
+    --surface: #98e35b;
+    --text: #ffffff;
+  }
+}
+
+[data-theme="koi"] {
+  --brand: oklch(0% 0 0);
+  --surface: oklch(100% 0.00011 271.152);
+  --text: oklch(67.55% 0.18356 48.121);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="koi"] {
+    --brand: #000000;
+    --surface: #ffffff;
+    --text: #ed6b00;
+  }
+}
+
+[data-theme="gamer"] {
+  --brand: oklch(84.417% 0.1457 209.321);
+  --surface: oklch(0% 0 0);
+  --text: oklch(58.823% 0.23795 1.105);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="gamer"] {
+    --brand: #00e5ff;
+    --surface: #000000;
+    --text: #e10074;
+  }
+}
+
+[data-theme="sky"] {
+  --brand: oklch(37.226% 0.12006 257.202);
+  --surface: oklch(100% 0.00011 271.152);
+  --text: oklch(62.645% 0.13487 237.682);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="sky"] {
+  --brand: #0c3e7e;
+  --surface: #ffffff;
+  --text: #1092cf;
+  }
+}
+
+[data-theme="dusk"] {
+  --brand: oklch(100% 0.00011 271.152);
+  --surface: oklch(34.286% 0.08796 304.321);
+  --text: oklch(69.328% 0.1194 42.173);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="dusk"] {
+  --brand: #ffffff;
+  --surface: #432b5d;
+  --text: #da825f;
+  }
+}
+
+[data-theme="cherry"] {
+  --brand: oklch(74.946% 0.15114 21.301);
+  --surface: oklch(84.702% 0.0883 3.943);
+  --text: oklch(100% 0.00011 271.152);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="cherry"] {
+  --brand: #ff8383;
+  --surface: #ffffff;
+  --text: #ffffff;
+  }
+}
+
+[data-theme="sophia"] {
+  --brand: oklch(36.724% 0.14599 13.701);
+  --surface: oklch(74.321% 0.12314 15.396);
+  --text: oklch(34.928% 0.14026 19.893);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="sophia"] {
+ --brand: #790127;
+  --surface: #ef8a92;
+  --text: #720019;
+  }
+}
+
+[data-theme="sunshine"] {
+  --brand: oklch(87.314% 0.14588 103.002);
+  --surface: oklch(100% 0.00011 271.152);
+  --text: oklch(72.77% 0.16048 60.359);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="sunshine"] {
+ --brand: #e7d95b;
+  --surface: #ffffff;
+  --text: #ee8b21;
+  }
+}
+
+[data-theme="brat"] {
+  --brand: oklch(0% 0 0);
+  --surface: oklch(76.606% 0.22034 134.207);
+  --text: oklch(0% 0 0);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="brat"] {
+ --brand: #000000;
+  --surface: #72cf01;
+  --text: #000000;
+  }
+}
+
+[data-theme="pie"] {
+  --brand: oklch(93.957% 0.16074 108.385);
+  --surface: oklch(75.582% 0.1706 352.492);
+  --text: oklch(83.827% 0.09632 233.48);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="pie"] {
+ --brand: #f5f366;
+  --surface: #ff7dba;
+  --text: #88d5ff;
+  }
+}
+
+[data-theme="joel"] {
+  --brand: oklch(29.173% 0.06339 119.77);
+  --surface: oklch(50.141% 0.09621 118.858);
+  --text: oklch(100% 0.00011 271.152);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="joel"] {
+  --brand: #283005;
+  --surface: #5e6b24;
+  --text: #ffffff;
+  }
+}
+
+[data-theme="mark"] {
+  --brand: oklch(56.564% 0.16626 42.722);
+  --surface: oklch(81.367% 0.16453 83.855);
+  --text: oklch(56.564% 0.16626 42.722);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="mark"] {
+   --brand: #c24b05;
+  --surface: #f4b711;
+  --text: #c24b05;
+  }
+}
+
+[data-theme="lilly"] {
+  --brand: oklch(63.787% 0.25496 11.69);
+  --surface: oklch(77.124% 0.14041 301.705);
+  --text: oklch(0% 0 0);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="lilly"] {
+   --brand: #ff0062;
+  --surface: #c59eff;
+  --text: #000000;
+  }
+}
+
+[data-theme="HEY"] {
+  --brand: oklch(67.631% 0.21154 24.793);
+  --surface: oklch(96.305% 0.05277 169.564);
+  --text: oklch(0% 0 0);
+}
+
+@supports not (color: oklch(79.602% 0.10059 299.836)) {
+  [data-theme="HEY"] {
+   --brand: #ff5050;
+  --surface: #d1ffed;
+  --text: #000000;
+  }
+}
+
 @layer base {
   body {
     @apply bg-surface text-text;
   }
 }
+
+
