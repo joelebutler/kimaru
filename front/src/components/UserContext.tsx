@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { type User } from "@shared/shared-types";
+import { API, type User } from "@shared/shared-types";
 
 type UserContextType = {
   user: User | null;
@@ -71,7 +71,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       console.log("[refreshUser] Fetching user with token", token);
-      const res = await fetch("/api/get-user", {
+      const res = await fetch(API.BASE + API.GET_USER, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useUser } from "@front/components/UserContext";
 import { applyTheme } from "@front/components/types";
-import { APIEndpoints, type Message } from "@shared/shared-types";
+import { API, type Message } from "@shared/shared-types";
 
 type FormState = {
   username: string;
@@ -42,7 +42,7 @@ function Authentication() {
     setLoading(true);
     if (mode === "register") {
       try {
-        const res = await fetch(APIEndpoints.REGISTER, {
+        const res = await fetch(API.BASE + API.REGISTER, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -53,7 +53,7 @@ function Authentication() {
         });
         if (res.ok) {
           // After registration, log in to get JWT
-          const loginRes = await fetch("/api/login", {
+          const loginRes = await fetch(API.BASE + API.LOGIN, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -96,7 +96,7 @@ function Authentication() {
     } else {
       // Login logic
       try {
-        const res = await fetch("/api/login", {
+        const res = await fetch(API.BASE + API.LOGIN, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

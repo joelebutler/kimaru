@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@front/components/UserContext";
-import { APIEndpoints } from "@shared/shared-types";
+import { API } from "@shared/shared-types";
 import { Section } from "@front/components/Section";
 import { Card } from "@front/components/Card";
 import Select from "@front/components/Select";
@@ -20,7 +20,7 @@ function Settings() {
     // Save to backend if user is logged in
     if (user && user.username && user.theme !== theme) {
       setSaving(true);
-      fetch(APIEndpoints.CHANGE_THEME, {
+      fetch(API.BASE + API.CHANGE_THEME, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: user.username, theme }),

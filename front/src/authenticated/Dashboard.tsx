@@ -3,7 +3,7 @@ import { Card } from "@front/components/Card";
 import { Section } from "@front/components/Section";
 import { useUser } from "@front/components/UserContext";
 import { useEffect, useState } from "react";
-import { APIEndpoints, type Room } from "@shared/shared-types";
+import { API, type Room } from "@shared/shared-types";
 import { NavLink } from "react-router";
 import Dialog from "@front/components/Dialog";
 
@@ -42,7 +42,7 @@ const Dashboard = () => {
       const ownedResults: Lobby[] = await Promise.all(
         owned.map(async (roomID) => {
           try {
-            const res = await fetch(`${APIEndpoints.ROOM_BASE}${roomID}`);
+            const res = await fetch(API.BASE + API.ROOM_BASE + "/" + roomID);
             if (!res.ok) throw new Error();
             const data: Room = await res.json();
             return {
@@ -62,7 +62,7 @@ const Dashboard = () => {
       const joinedResults: Lobby[] = await Promise.all(
         joinedFiltered.map(async (roomID) => {
           try {
-            const res = await fetch(`${APIEndpoints.ROOM_BASE}${roomID}`);
+            const res = await fetch(API.BASE + API.ROOM_BASE + "/" + roomID);
             if (!res.ok) throw new Error();
             const data: Room = await res.json();
             return {
@@ -148,7 +148,7 @@ const Dashboard = () => {
                           e.preventDefault();
                           if (!user) return;
                           const res = await fetch(
-                            `${APIEndpoints.ROOM_BASE}${lobby.id}`,
+                            API.BASE + API.ROOM_BASE + lobby.id,
                             {
                               method: "DELETE",
                             },
@@ -199,7 +199,10 @@ const Dashboard = () => {
                           e.preventDefault();
                           if (!user) return;
                           await fetch(
-                            `${APIEndpoints.ROOM_BASE}${lobby.id}/leave`,
+                            API.BASE +
+                              API.ROOM_BASE +
+                              lobby.id +
+                              API.ROOM_LEAVE,
                             {
                               method: "PATCH",
                               headers: { "Content-Type": "application/json" },

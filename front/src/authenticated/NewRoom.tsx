@@ -6,7 +6,7 @@ import { useUser } from "@front/components/UserContext";
 import { Switch } from "@front/components/Switch";
 import { Tooltip } from "@front/components/Tooltip";
 import { FiInfo } from "react-icons/fi";
-import { APIEndpoints, type Message } from "@shared/shared-types";
+import { API, type Message } from "@shared/shared-types";
 
 import type { User, Room } from "@shared/shared-types";
 import { useNavigate } from "react-router";
@@ -51,7 +51,7 @@ function NewRoom() {
         createdAt: new Date(),
         members: createdBy ? [createdBy.username] : [],
       };
-      const res = await fetch(APIEndpoints.CREATE_ROOM, {
+      const res = await fetch(API.BASE + API.ROOM_BASE + API.CREATE_ROOM, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

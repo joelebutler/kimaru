@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { APIEndpoints, type Room } from "@shared/shared-types";
+import { API, type Room } from "@shared/shared-types";
 import { Card } from "@front/components/Card";
 import { Section } from "@front/components/Section";
 import { useUser } from "@front/components/UserContext";
@@ -21,7 +21,7 @@ function RoomPage() {
       try {
         // Fetch room info
         console.log("Fetching room info for ID:", id);
-        const res = await fetch(`${APIEndpoints.ROOM_BASE}${id}`);
+        const res = await fetch(API.BASE + API.ROOM_BASE + "/" + id);
         if (!res.ok) {
           throw new Error(await res.text());
         }
@@ -32,14 +32,11 @@ function RoomPage() {
         console.log("Room members:", data.members);
         console.log("Current user:", user?.username);
         if (user && data && !data.members.includes(user.username)) {
-          await fetch(
-            `${APIEndpoints.ROOM_BASE}${id}${APIEndpoints.ADD_TO_ROOM}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username: user.username }),
-            },
-          );
+          await fetch(API.BASE + API.ROOM_BASE + "/" + id + API.ADD_TO_ROOM, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user.username }),
+          });
         }
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -73,7 +70,7 @@ function RoomPage() {
       </Section>
     );
   return (
-    <div className="flex-1 flex flex-col h-full min-h-[80vh] w-full p-2 md:p-6">
+    <Section className="flex-1 flex flex-col w-full p-2 md:p-6">
       {/* Mobile View */}
       <div className="flex-1 flex flex-col gap-4 md:hidden">
         <Card className="flex items-center justify-center text-center p-4">
@@ -185,7 +182,7 @@ function RoomPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </Section>
   );
 }
 
