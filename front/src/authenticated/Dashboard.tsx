@@ -129,11 +129,33 @@ const Dashboard = () => {
                         ? `${Array.isArray(lobby.members) ? lobby.members.length : lobby.members} members`
                         : "Unknown members"}
                     </span>
-                    <NavLink to={`/room/${lobby.id}`}>
-                      <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
-                        Join
+                    <span>
+                      <NavLink to={`/room/${lobby.id}`}>
+                        <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
+                          Join
+                        </button>
+                      </NavLink>
+                      <button
+                        className="ml-4 px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (!user) return;
+                          const res = await fetch(
+                            `${APIEndpoints.ROOM_BASE}${lobby.id}`,
+                            {
+                              method: "DELETE",
+                            },
+                          );
+                          if (res.ok) {
+                            setOwnedLobbies((prev) =>
+                              prev.filter((l) => l.id !== lobby.id),
+                            );
+                          }
+                        }}
+                      >
+                        Delete
                       </button>
-                    </NavLink>
+                    </span>
                   </li>
                 ))
               ) : (
@@ -158,11 +180,31 @@ const Dashboard = () => {
                         ? `${lobby.members} members`
                         : "Unknown members"}
                     </span>
-                    <NavLink to={`/room/${lobby.id}`}>
-                      <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
-                        Join
+                    <span>
+                      <NavLink to={`/room/${lobby.id}`}>
+                        <button className="ml-4 px-3 py-1 rounded bg-brand text-white text-xs font-semibold hover:bg-brand/80 transition">
+                          Join
+                        </button>
+                      </NavLink>
+                      <button
+                        className="ml-4 px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (!user) return;
+                          await fetch(
+                            `${APIEndpoints.ROOM_BASE}${lobby.id}/leave`,
+                            {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ username: user.username }),
+                            },
+                          );
+                          refreshUser();
+                        }}
+                      >
+                        Leave
                       </button>
-                    </NavLink>
+                    </span>
                   </li>
                 ))
               ) : (

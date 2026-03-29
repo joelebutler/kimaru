@@ -142,6 +142,74 @@ async function Route(request: Request, url: URL): Promise<Response> {
             return new Response("Error retrieving theme", { status: 500 });
         }
     }
+
+            // PATCH /api/room/:id/leave - remove user from room's members and user's joinedLobbies
+        if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && url.pathname.includes('/leave') && request.method === 'PATCH') {
+            try {
+                const bodyText = body || await request.text();
+                if (!bodyText) {
+                    return new Response("Missing request body", { status: 400 });
+                }
+                const { username } = JSON.parse(bodyText);
+                const pathParts = url.pathname.split('/');
+                const roomId = pathParts[pathParts.length - 2];
+                if (!roomId || !username) {
+                    return new Response("Missing roomId or username", { status: 400 });
+                }
+                const uri = Bun.env.CONNECTION_STRING || "";
+                const client = new MongoClient(uri);
+                try {
+                    await client.connect();
+                    const rooms = client.db(Bun.env.DB_NAME).collection(ROOM_DB);
+                    const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+                    // Remove user from room's members array
+                    await rooms.updateOne(
+                        { roomId },
+                        { $pull: { members: username } }
+                    );
+                    // Remove room from user's joinedLobbies array
+                    await users.updateOne(
+                        { username },
+                        { $pull: { joinedLobbies: { $eq: roomId } } }
+                    );
+                    return new Response("User removed from room and user's joined lobbies", { status: 200 });
+                } finally {
+                    await client.close();
+                }
+            } catch (err) {
+                console.error("Error removing member from room:", err);
+                return new Response("Error removing member from room", { status: 500 });
+            }
+        }// DELETE /api/room/:id - delete a room and remove it from all users' ownedLobbies and joinedLobbies
+        if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && request.method === 'DELETE') {
+            try {
+                const pathParts = url.pathname.split('/');
+                const roomId = pathParts[pathParts.length - 1];
+                if (!roomId) {
+                    return new Response("Missing roomId", { status: 400 });
+                }
+                const uri = Bun.env.CONNECTION_STRING || "";
+                const client = new MongoClient(uri);
+                try {
+                    await client.connect();
+                    const rooms = client.db(Bun.env.DB_NAME).collection(ROOM_DB);
+                    const users = client.db(Bun.env.DB_NAME).collection(USER_DB);
+                    // Delete the room
+                    await rooms.deleteOne({ roomId });
+                    // Remove roomId from all users' ownedLobbies and joinedLobbies
+                    await users.updateMany(
+                        {},
+                        { $pull: { ownedLobbies: { $eq: roomId }, joinedLobbies: { $eq: roomId } } }
+                    );
+                    return new Response("Room deleted and removed from all users", { status: 200 });
+                } finally {
+                    await client.close();
+                }
+            } catch (err) {
+                console.error("Error deleting room:", err);
+                return new Response("Error deleting room", { status: 500 });
+            }
+        }
     
     // PATCH /api/room/id/add-member - add a user to a room's member list
     if (url.pathname.startsWith(APIEndpoints.ROOM_BASE) && url.pathname.endsWith(APIEndpoints.ADD_TO_ROOM) && request.method === 'PATCH') {
